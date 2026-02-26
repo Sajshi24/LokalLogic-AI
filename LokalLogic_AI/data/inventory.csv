@@ -1,0 +1,5 @@
+product_id,product_name,local_price,stock_level,category
+1,Premium Coffee,15.00,50,beverage
+2,Organic Milk,4.50,20,dairy
+3,Local Honey,12.00,15,pantry
+4,Whole Wheat Bread,3.50,30,bakery
