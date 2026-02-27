@@ -3,12 +3,28 @@ import pandas as pd
 import plotly.express as px
 import requests
 import time
+import numpy as np
 
 # --- CONFIG & THEME ---
 st.set_page_config(page_title="LokalLogic Enterprise", layout="wide")
 
 st.markdown("""
     <style>
+    /* 1. Remove Top Black Band/Header but keep the Sidebar Toggle visible */
+    header[data-testid="stHeader"] {
+        background-color: rgba(0,0,0,0);
+    }
+    
+    /* Ensure the sidebar toggle button is always visible and black for contrast */
+    button[data-testid="stSidebarCollapsedControl"] {
+        color: black !important;
+        background-color: white !important;
+        border-radius: 50%;
+        border: 1px solid #ddd;
+    }
+
+    .main .block-container {padding-top: 1rem;}
+
     /* Main Background */
     .stApp { background-color: #F0F8FF; color: black; }
     
@@ -17,7 +33,6 @@ st.markdown("""
     [data-testid="stSidebar"] * { color: black !important; }
 
     /* HEADING: Text White, Icons Black */
-    /* This targets the main titles and subtitles */
     h1, h2 { 
         color: white !important; 
         background-color: #4682B4; 
@@ -26,15 +41,20 @@ st.markdown("""
         display: flex;
         align-items: center;
     }
-    /* Style for any icons within headers to appear black */
-    h1 span, h2 span, .stIcon { color: black !important; }
+    
+    /* Hover Fade Effect for Interactive Blocks */
+    div.stButton > button, div[data-testid="stMetric"] {
+        transition: opacity 0.3s ease;
+    }
+    div.stButton > button:hover, div[data-testid="stMetric"]:hover {
+        opacity: 0.7;
+    }
 
     p, span, label { color: black !important; }
     
     .stButton>button { background-color: #4682B4; color: white; border-radius: 8px; font-weight: bold; }
     .ai-reply { color: #000080; font-weight: bold; background: white; padding: 15px; border-radius: 10px; border-left: 5px solid #4682B4; }
     
-    /* Ensure metric labels are visible */
     [data-testid="stMetricValue"] { color: black !important; }
     [data-testid="stMetricLabel"] { color: #333 !important; }
     </style>
@@ -77,12 +97,6 @@ else:
     if menu == "Home":
         st.title("Home 🏠")
         st.write(f"### Welcome to {st.session_state.user_db['name']} Management Portal")
-        
-        c1, c2, c3 = st.columns(3)
-        with c1: st.info("📊 **Dashboard**")
-        with c2: st.info("📢 **AI Studio**")
-        with c3: st.info("💬 **AI Assistant**")
-        
         st.write("---")
         st.write("### 📂 Load Data")
         file = st.file_uploader("Upload CSV", type="csv")
@@ -93,33 +107,40 @@ else:
     elif menu == "Dashboard":
         st.title("Dashboard 📊")
         if st.session_state.data is not None:
+            # 1. Financial Metrics
             col1, col2, col3 = st.columns(3)
-            col1.metric("Earned", "$15,200", "+8%")
-            col2.metric("Spent", "$9,100", "-1%")
-            col3.metric("Profit", "40.1%", "↑ 5%")
+            col1.metric("Total Earned", "$15,200", "+8%")
+            col2.metric("Total Spent", "$9,100", "-1%")
+            col3.metric("Net Profit", "40.1%", "↑ 5%")
             
             st.write("---")
-            g1, g2 = st.columns(2)
-            with g1:
-                st.subheader("Profit vs Loss Graph 📉")
-                pl_data = pd.DataFrame({"Time": ["T1", "T2", "T3", "T4"], "Amt": [100, -20, 250, 400]})
-                st.plotly_chart(px.area(pl_data, x="Time", y="Amt", color_discrete_sequence=['#4682B4']), use_container_width=True)
-            with g2:
-                st.subheader("Product Sales Velocity 📈")
-                st.plotly_chart(px.bar(st.session_state.data, x=st.session_state.data.columns[0], y=st.session_state.data.columns[1], color_discrete_sequence=['#87CEFA']), use_container_width=True)
+            
+            # 2. Daily Profit/Loss Analysis
+            st.subheader("Daily Profit/Loss Analysis (30 Days) 📉")
+            days = list(range(1, 31))
+            daily_vals = np.random.randint(-150, 600, size=30)
+            df_daily = pd.DataFrame({"Day": days, "Profit/Loss ($)": daily_vals})
+            st.plotly_chart(px.area(df_daily, x="Day", y="Profit/Loss ($)", color_discrete_sequence=['#4682B4']), use_container_width=True)
+            
+            st.write("---")
+            
+            # 3. Individual Product Sale Graph
+            st.subheader("Individual Product Sales Velocity 📈")
+            st.plotly_chart(px.bar(st.session_state.data, 
+                                   x=st.session_state.data.columns[0], 
+                                   y=st.session_state.data.columns[1], 
+                                   labels={st.session_state.data.columns[0]: "Units Sold", st.session_state.data.columns[1]: "Product"},
+                                   color_discrete_sequence=['#87CEFA']), use_container_width=True)
         else:
-            st.warning("Please upload CSV on Home page.")
+            st.warning("Please upload CSV on Home page to view dashboard analytics.")
 
     elif menu == "AI Studio":
         st.title("AI Studio 📢")
-        # Ensure input labels are black
         k1 = st.text_input("Vibe Keyword (e.g. Fresh)")
         k2 = st.text_input("Product Keyword (e.g. Milk)")
         k3 = st.text_input("Benefit Keyword (e.g. Organic)")
-        
         if st.button("Generate My Custom Post"):
             if k1 and k2 and k3:
-                # Force backend to use the variables
                 res = requests.get(f"http://127.0.0.1:8000/generate-marketing?k1={k1}&k2={k2}&k3={k3}").json()
                 st.image("https://images.unsplash.com/photo-1542838132-92c53300491e?w=800")
                 st.write("### 📝 Generated Caption")
