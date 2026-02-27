@@ -67,12 +67,23 @@ def get_summary():
 
 @app.get("/generate-marketing")
 def generate_marketing(k1: str, k2: str, k3: str):
-    # Logic strictly using user input k1, k2, k3
-    caption = f"✨ THE {k1.upper()} REVOLUTION IS HERE! ✨\n\nLooking for the perfect {k2}? " \
-              f"We've combined quality with the {k3} you deserve. " \
-              f"Our new {k2} collection is officially in stock. Stop by and experience {k1} today! 🏠"
+    # This logic forces the use of your k1 (Vibe), k2 (Product), and k3 (Benefit)
+    # Using python f-strings to inject your exact inputs into the text
     
-    hashtags = f"#{k1.replace(' ', '')} #{k2.replace(' ', '')} #{k3.replace(' ', '')} #LocalQuality #NewArrival"
+    caption = (
+        f"✨ ATTENTION: EXPERIENCE THE {k1.upper()} VIBE! ✨\n\n"
+        f"Looking for the best {k2} in town? Look no further! "
+        f"We've combined our unique local touch with the {k3} quality "
+        f"you've been waiting for.\n\n"
+        f"Whether you're a long-time fan or a first-time visitor, "
+        f"our new {k2} is designed specifically for you. "
+        f"Stop by today and feel the {k1} difference! 🏠"
+    )
+    
+    # Create hashtags by removing spaces from your keywords
+    h1, h2, h3 = k1.replace(" ", ""), k2.replace(" ", ""), k3.replace(" ", "")
+    hashtags = f"#{h1} #{h2} #{h3} #LocalLogic #BusinessGrowth"
+    
     return {"caption": caption, "hashtags": hashtags}
 
 @app.get("/ai-chat")

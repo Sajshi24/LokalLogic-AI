@@ -57,6 +57,27 @@ st.markdown("""
     
     [data-testid="stMetricValue"] { color: black !important; }
     [data-testid="stMetricLabel"] { color: #333 !important; }
+
+    /* --- NEW CHANGES FOR HASHTAGS --- */
+    /* Target the code container and remove default dark background */
+    div[data-testid="stCodeBlock"], div[data-testid="stCodeBlock"] > div {
+        background-color: white !important;
+        border: 2px solid black !important;
+        border-radius: 8px !important;
+    }
+
+    /* Target the actual text inside the code block */
+    code {
+        color: black !important;
+        background-color: white !important;
+        font-family: inherit !important;
+        font-weight: bold !important;
+    }
+
+    /* Remove the copy button background to keep it clean */
+    button[title="Copy to clipboard"] {
+        background-color: transparent !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -136,19 +157,40 @@ else:
 
     elif menu == "AI Studio":
         st.title("AI Studio 📢")
-        k1 = st.text_input("Vibe Keyword (e.g. Fresh)")
-        k2 = st.text_input("Product Keyword (e.g. Milk)")
-        k3 = st.text_input("Benefit Keyword (e.g. Organic)")
+        
+        # 1. Capture user inputs
+        k1 = st.text_input("Vibe Keyword (e.g. Trendy)", key="vibe_input")
+        k2 = st.text_input("Product Keyword (e.g. Coffee Beans)", key="prod_input")
+        k3 = st.text_input("Benefit Keyword (e.g. Extra Caffeine)", key="benefit_input")
+        
         if st.button("Generate My Custom Post"):
             if k1 and k2 and k3:
-                res = requests.get(f"http://127.0.0.1:8000/generate-marketing?k1={k1}&k2={k2}&k3={k3}").json()
-                st.image("https://images.unsplash.com/photo-1542838132-92c53300491e?w=800")
-                st.write("### 📝 Generated Caption")
-                st.write(res['caption'])
-                st.write("### 🏷️ Hashtags")
-                st.code(res['hashtags'])
+                try:
+                    # Request to your FastAPI backend
+                    url = f"http://127.0.0.1:8000/generate-marketing"
+                    params = {"k1": k1, "k2": k2, "k3": k3}
+                    response = requests.get(url, params=params)
+                    
+                    if response.status_code == 200:
+                        res = response.json()
+                        
+                        # FIX: Dynamic Image based on your Product Keyword (k2)
+                        # We use Unsplash Source to find an image matching k2 instead of the vegetable link
+                        st.image(f"https://source.unsplash.com/featured/?{k2.replace(' ', '')}", caption=f"Suggested Visual for {k2}")
+                        
+                        st.write("### 📝 Your Custom Caption")
+                        # Forces the black text style you like
+                        st.info(res['caption'])
+                        
+                        st.write("### 🏷️ Smart Hashtags")
+                        # This will use your CSS for the white block/black border
+                        st.code(res['hashtags'])
+                    else:
+                        st.error("Backend Error: Check if main.py is running.")
+                except Exception as e:
+                    st.error(f"Connection failed: {e}")
             else:
-                st.error("Please fill all 3 keywords!")
+                st.warning("Please enter all three keywords to generate your post!")
 
     elif menu == "AI Assistant":
         st.title("AI Assistant 💬")
